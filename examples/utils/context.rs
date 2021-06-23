@@ -36,7 +36,6 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use std::io::{stdout, Stdout};
 use tui::backend::CrosstermBackend;
 use tui::Terminal;
 
@@ -45,7 +44,25 @@ use tui::Terminal;
 /// Context holds data structures used by the ui
 pub struct Context {
     pub(crate) input_hnd: InputHandler,
-    pub(crate) terminal: Terminal<CrosstermBackend<Stdout>>,
+    pub(crate) terminal: Terminal<tuirealm::Backend>,
+}
+
+#[cfg(feature = "output-stdout")]
+fn output() -> tuirealm::Output {
+    std::io::stdout()
+}
+
+#[cfg(feature = "output-stderr")]
+fn output() -> tuirealm::Output {
+    std::io::stderr()
+}
+
+#[cfg(feature = "output-file")]
+fn output() -> tuirealm::Output {
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open("/dev/tty")
+        .expect("failed to open /dev/tty")
 }
 
 impl Context {
@@ -55,11 +72,11 @@ impl Context {
     pub fn new() -> Context {
         let _ = enable_raw_mode();
         // Create terminal
-        let mut stdout = stdout();
-        assert!(execute!(stdout, EnterAlternateScreen).is_ok());
+        let mut output = output();
+        assert!(execute!(output, EnterAlternateScreen).is_ok());
         Context {
             input_hnd: InputHandler::new(),
-            terminal: Terminal::new(CrosstermBackend::new(stdout)).unwrap(),
+            terminal: Terminal::new(CrosstermBackend::new(output)).unwrap(),
         }
     }
 

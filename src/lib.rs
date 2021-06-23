@@ -342,7 +342,6 @@ extern crate tui as tuirs;
 
 // Ext
 use std::collections::{HashMap, LinkedList};
-use std::io::Stdout;
 use tuirs::{backend::CrosstermBackend, layout::Rect, Frame};
 
 // Modules
@@ -363,10 +362,31 @@ use event::{Event, KeyEvent};
 
 // -- Types
 
+#[cfg(any(
+        all(feature = "output-stdout", feature = "output-stderr"),
+        all(feature = "output-stdout", feature = "output-file"),
+        all(feature = "output-stderr", feature = "output-file"),
+        ))]
+compile_error!(
+    "exactly one of ['output-stdout', 'output-stderr', 'output-file'] \
+must be selected"
+);
+#[cfg(feature = "output-stdout")]
+pub use std::io::Stdout as Output;
+#[cfg(feature = "output-stderr")]
+pub use std::io::Stderr as Output;
+#[cfg(feature = "output-file")]
+pub use std::fs::File as Output;
+
+/// ## Backend
+///
+/// Backend is an alias to crossterm with the output device selected at build time.
+pub type Backend = CrosstermBackend<Output>;
+
 /// ## Canvas
 ///
 /// Canvas represents the Frame where the view will be displayed in
-pub type Canvas<'a> = Frame<'a, CrosstermBackend<Stdout>>;
+pub type Canvas<'a> = Frame<'a, Backend>;
 
 // -- Msg
 

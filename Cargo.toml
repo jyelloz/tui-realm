@@ -23,7 +23,11 @@ unicode-width = { version = "0.1.8", optional = true }
 pretty_assertions = "0.7.2"
 
 [features]
+default = ["output-stdout"]
 with-components = [ "textwrap", "unicode-width" ]
+output-stdout = []
+output-stderr = []
+output-file = []
 
 [[example]]
 name = "gallery"
